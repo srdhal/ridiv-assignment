@@ -17,19 +17,32 @@ function App() {
   const [checked,setChecked]=useState(false)
   
   useEffect(()=>{
+    const initialList=JSON.parse(localStorage.getItem('list'))
+    if(initialList) setallList(initialList)
+  },[])
+
+
+  useEffect(()=>{
+    localStorage.setItem('list',JSON.stringify(allList))
     setshowList(allList)
   },[allList,checked])
 
+
   const handleClick=()=>{
-    const today=new Date()
-    const date=today.getDate() + '-' + (today.getMonth() + 1) + '-' + today.getFullYear()
-    var newTask = {
-      name: task,
-      date: date,
-      completed: false,
+    if(task==''){
+      alert("enter the task")
     }
-    setallList([...allList,newTask])  
-    setTask("")
+    else{
+      const today=new Date()
+      const date=today.getDate() + '-' + (today.getMonth() + 1) + '-' + today.getFullYear()
+      var newTask = {
+        name: task,
+        date: date,
+        completed: false,
+      }
+      setallList([...allList,newTask])  
+      setTask("")
+    }
   }
 
   const handleDelete=(index)=>{
@@ -39,13 +52,13 @@ function App() {
     //  console.log(index)
   }
 
-  const handleChecked=(index)=>{
+  const handleChecked=(name)=>{
+    setChecked(!checked)
      const revisedList=allList.map((ele,idx)=>{
-      if(idx==index){
+      if(ele.name==name){
         ele.completed=!ele.completed;
       }
      })
-     setChecked(!checked)
     //  setallList(allList)
   }
 
@@ -74,7 +87,7 @@ function App() {
     <DragDropContext onDragEnd={handleOnDragEnd}>
       <div className='container'>
         <div className='inputContainer'>
-          <input type='text' placeholder="enter your task..." onChange={(e)=>setTask(e.currentTarget.value)}/>
+          <input type='text' value={task} placeholder="enter your task..." onChange={(e)=>setTask(e.currentTarget.value)}/>
           <Fab color="primary" aria-label="add" style={{margin: 'auto 15px 5px 15px'}} onClick={handleClick}>
             <AddIcon/>
           </Fab>
@@ -93,7 +106,7 @@ function App() {
                     <p style={{width: '40vw'}}>{ele.name}</p>
                     <p style={{fontSize: '12px'}}>created at {ele.date}</p>
                     <div>
-                    <Checkbox type="checkbox" name="checkbox" value={ele.completed} checked={ele.completed} onChange={()=>handleChecked(index)}/>
+                    <Checkbox type="checkbox" name="checkbox" value={ele.completed} checked={ele.completed} onChange={()=>handleChecked(ele.name)}/>
                     </div>
                     <div>
                       <Tooltip title="Delete">
