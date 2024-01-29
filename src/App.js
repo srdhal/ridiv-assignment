@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import { IconButton, Tooltip } from '@mui/material';
 import Checkbox from '@mui/material/Checkbox';
 import DragIndicatorOutlinedIcon from '@mui/icons-material/DragIndicatorOutlined';
+import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd';
 
 function App() {
   const [task,setTask]=useState("")
@@ -14,7 +15,6 @@ function App() {
   const [allList,setallList]=useState([])
   const [selected,setSelected]=useState(false)
   const [checked,setChecked]=useState(false)
-  const [completedList,setcompletedList]=useState([])
   
   useEffect(()=>{
     setshowList(allList)
@@ -61,8 +61,17 @@ function App() {
     setSelected(!selected) 
   }
 
+  const handleOnDragEnd=(result)=>{
+     if(!result.destination) return
+     const draggableBoxes=Array.from(showList)
+     const [draggedItems]=draggableBoxes.splice(result.source.index,1)
+     draggableBoxes.splice(result.destination.index,0,draggedItems)
+     setshowList(draggableBoxes)
+  }
+
   return (
     <div className="App">
+    <DragDropContext onDragEnd={handleOnDragEnd}>
       <div className='container'>
         <div className='inputContainer'>
           <input type='text' placeholder="enter your task..." onChange={(e)=>setTask(e.currentTarget.value)}/>
@@ -73,25 +82,36 @@ function App() {
             <CheckIcon />
           </Fab>
         </div>
-        {showList.length?showList.map((ele,index)=>(
-          <div className='subcontainer'>
-              <DragIndicatorOutlinedIcon style={{margin: '10px'}}/>
-              <p style={{width: '40vw'}}>{ele.name}</p>
-              <p style={{fontSize: '12px'}}>created at {ele.date}</p>
-              <div>
-              <Checkbox type="checkbox" name="checkbox" value={ele.completed} checked={ele.completed} onChange={()=>handleChecked(index)}/>
-              </div>
-              <div>
-                <Tooltip title="Delete">
-                <IconButton onClick={()=>handleDelete(index)}>
-                  <DeleteIcon/>
-                </IconButton>
-                </Tooltip>
-              </div>
-          </div>
-        )):(<p>No Task yet</p>)}
-        {}
+        <Droppable droppableId='taskboxes'>
+        {(provided)=>(
+          <div ref={provided.innerRef} {...provided.droppableProps}>
+            {showList.length?showList.map((ele,index)=>(
+              <Draggable key={index} draggableId={index.toString()} index={index}>
+              {(provided)=>(
+                <div className='subcontainer' ref={provided.innerRef} {...provided.dragHandleProps} {...provided.draggableProps}>
+                    <DragIndicatorOutlinedIcon style={{margin: '10px'}}/>
+                    <p style={{width: '40vw'}}>{ele.name}</p>
+                    <p style={{fontSize: '12px'}}>created at {ele.date}</p>
+                    <div>
+                    <Checkbox type="checkbox" name="checkbox" value={ele.completed} checked={ele.completed} onChange={()=>handleChecked(index)}/>
+                    </div>
+                    <div>
+                      <Tooltip title="Delete">
+                      <IconButton onClick={()=>handleDelete(index)}>
+                        <DeleteIcon/>
+                      </IconButton>
+                      </Tooltip>
+                    </div>
+                </div>
+              )}
+              </Draggable>
+            )):(<p>No Task yet</p>)}
+            {provided.placeholder}
+          </div> 
+        )}
+        </Droppable>  
       </div>
+    </DragDropContext>
     </div>
   );
 }
